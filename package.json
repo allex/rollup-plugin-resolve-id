@@ -1,25 +1,35 @@
 {
-    "name": "rollup-plugin-import-resolver",
-    "version": "1.0.1",
-    "description": "Resolves import statements using aliases and file extensions",
-    "main": "src/index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/opis-assets/rollup-plugin-import-resolver.git"
-    },
-    "keywords": [
-        "rollup",
-        "import",
-        "alias",
-        "extensions"
-    ],
-    "author": "Sorin Sarca <sarca_sorin@hotmail.com>",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/opis-assets/rollup-plugin-import-resolver/issues"
-    },
-    "homepage": "https://github.com/opis-assets/rollup-plugin-import-resolver"
+  "name": "rollup-plugin-resolve2",
+  "version": "1.0.0",
+  "description": "Resolves import statements using aliases and file extensions, (sync with webpack resolve specs)",
+  "main": "lib/index.js",
+  "scripts": {
+    "lint": "standard \"src/*.js\"",
+    "lint:fix": "standard \"src/*.js\" --fix",
+    "build": "rollup-worker -c .fssrc.js",
+    "test": "npm run lint",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/allex/rollup-plugin-resolve2.git"
+  },
+  "keywords": [
+    "rollup",
+    "import",
+    "alias",
+    "extensions",
+    "resolver",
+    "mainFields"
+  ],
+  "author": "Allex Wang <allex.wxn@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/allex/rollup-plugin-resolve2/issues"
+  },
+  "homepage": "https://github.com/allex/rollup-plugin-resolve2",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0"
+  }
 }

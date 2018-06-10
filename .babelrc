@@ -1,0 +1,16 @@
+{
+  "presets": [
+    ["env", {
+      "loose": true,
+      "modules": false,
+      "useBuiltIns": false,
+      "exclude": ["transform-regenerator", "transform-async-to-generator"],
+      "targets": {
+        "node": "5.12.0"
+      }
+    }]
+  ],
+  "plugins": [
+  ],
+  "comments": false
+}
