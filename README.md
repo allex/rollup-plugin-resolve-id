@@ -1,8 +1,9 @@
 # rollup-plugin-resolve2
 
-Resolves import statements by using aliases and file extensions when bundling with rollup.
+Rollup plugin for resolves module by using aliases and file extensions,
 Also resolves the file when importing a directory. Based on [rollup-plugin-import-resolver][rollup-plugin-import-resolver]
-(sync with webpack resolve specs)
+
+**(sync with webpack resolve specs)**
 
 ## Install
 
@@ -57,10 +58,10 @@ and plugin options
 
 ```json
 {
-    "extensions": [".js", ".jsm"],
-    "alias": {
-        "somelib": "./node_modules/other_lib/src/"
-    }
+  "extensions": [".js", ".jsm"],
+  "alias": {
+    "somelib": "./node_modules/other_lib/src/"
+  }
 }
 ```
 
