@@ -18,11 +18,7 @@ export default {
         input: 'src/index.js',
         plugins: [ 'babel', 'resolve' ],
         targets: [
-          {
-            format: 'es',
-            file: 'index.js',
-            banner
-          }
+          { format: 'cjs', file: 'index.js', banner }
         ]
       }
     ]

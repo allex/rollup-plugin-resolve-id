@@ -1,5 +1,6 @@
-const path = require('path')
-const fs = require('fs')
+import path from 'path'
+import fs from 'fs'
+import Cache from './cache'
 
 const localImport = /^[.]{1,2}\//
 
@@ -20,19 +21,27 @@ const getAlias = (file, aliases) => {
   return null
 }
 
+const fileExists = file => {
+  try {
+    if (fs.existsSync(file)) {
+      let stat = fs.statSync(file)
+      return stat.isFile();
+    }
+  } catch (e) {}
+  return false
+}
+
 const getExistingFileWithExt = (file, extensions) => {
   for (let i = 0; i < extensions.length; i++) {
     let f = file + extensions[i]
-    if (fs.existsSync(f)) {
-      return f
-    }
+    if (fileExists(f)) return f
   }
   return null
 }
 
 const resolveModuleEntry = (dir, options) => {
   let pkgfile = path.join(dir, 'package.json'), pkg
-  if (fs.existsSync(pkgfile) && (pkg = require(pkgfile))) {
+  if (fileExists(pkgfile) && (pkg = require(pkgfile))) {
     const mainFields = options.mainFields.reduce((p, mainField) => {
       const t = pkg[mainField]
       if (t && p.indexOf(t) === -1) p.push(t)
@@ -42,9 +51,7 @@ const resolveModuleEntry = (dir, options) => {
     const main = mainFields.reduce((p, mainField) => {
       if (!p) {
         const f = path.join(dir, mainField)
-        if (fs.existsSync(f) && fs.statSync(f).isFile()) {
-          return f
-        }
+        if (fileExists(f)) return f
       }
       return p
     }, '') || path.join(dir, 'index.js')
@@ -52,7 +59,7 @@ const resolveModuleEntry = (dir, options) => {
   }
 }
 
-module.exports = options => {
+export default (options) => {
   if (!options) {
     options = { extensions: ['.js'], alias: {} }
   } else {
@@ -77,12 +84,45 @@ module.exports = options => {
 
   options.mainFields = options.mainFields || [ 'module', 'main', 'jsnext:main', 'browser' ]
 
-  const resolvedCache = {}
+  const cache = new Cache()
+
+  const resolvePath = file => {
+    if (fs.existsSync(file)) {
+      if (!fs.statSync(file).isDirectory()) {
+        // Consider it a file
+        return file
+      } else {
+        const entry = resolveModuleEntry(file, options)
+        if (entry) {
+          return entry
+        }
+      }
+
+      // There is a dir, also check if there isn't a file with extension
+      // on the same level with dir
+      let f = getExistingFileWithExt(file, options.extensions)
+      if (f !== null) {
+        return f
+      }
+
+      // Consider the file to be index.*
+      file = path.resolve(file, '.', options.indexFile)
+    }
+
+    // Try to get using extensions
+    return getExistingFileWithExt(file, options.extensions)
+  }
 
   return {
     resolveId (importee, importer) {
       if (!importer) {
         return null
+      }
+
+      let cv
+      const cacheKey = cache.getCacheKey(importee, importer)
+      if (cv = cache.get(cacheKey)) {
+        return cv
       }
 
       let file = null
@@ -102,42 +142,15 @@ module.exports = options => {
         file = path.resolve(importer, '..', importee)
       }
 
-      if (resolvedCache.hasOwnProperty(file)) {
-        return resolvedCache[file]
+      const newPath = resolvePath(file)
+      if (newPath) {
+        cache.add(cacheKey, newPath)
+        return newPath
       }
 
-      const key = file
-      const addCache = (v) => {
-        if (v) resolvedCache[key] = v
-        return v
-      }
-
-      if (fs.existsSync(file)) {
-        if (!fs.statSync(file).isDirectory()) {
-          // Consider it a file
-          return addCache(file)
-        } else {
-          const entry = resolveModuleEntry(file, options)
-          if (entry) {
-            // console.log(`Resolve ${importee} => ${entry}`)
-            return addCache(entry)
-          }
-        }
-        // There is a dir, also check if there isn't a file with extension
-        // on the same level with dir
-        let f = getExistingFileWithExt(file, options.extensions)
-        if (f !== null) {
-          return addCache(f)
-        }
-
-        // Consider the file to be index.*
-        file = path.resolve(file, '.', options.indexFile)
-      }
-
-      // Try to get using extensions
-      return addCache(
-        getExistingFileWithExt(file, options.extensions)
-      )
+      // if no path was found, null must be returned to keep the
+      // plugin chain!
+      return null
     }
   }
 }
