@@ -1,5 +1,5 @@
 {
-  "name": "rollup-plugin-resolve2",
+  "name": "rollup-plugin-resolve-id",
   "version": "1.0.0",
   "description": "Resolves import statements using aliases and file extensions, (sync with webpack resolve specs)",
   "main": "lib/index.js",
@@ -10,12 +10,10 @@
     "test": "npm run lint",
     "prepare": "npm run build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/allex/rollup-plugin-resolve2.git"
-  },
+  "repository": "allex/rollup-plugin-resolve-id",
   "keywords": [
     "rollup",
+    "rollup-plugin",
     "import",
     "alias",
     "extensions",
@@ -25,9 +23,9 @@
   "author": "Allex Wang <allex.wxn@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/allex/rollup-plugin-resolve2/issues"
+    "url": "https://github.com/allex/rollup-plugin-resolve-id/issues"
   },
-  "homepage": "https://github.com/allex/rollup-plugin-resolve2",
+  "homepage": "https://github.com/allex/rollup-plugin-resolve-id",
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0"
