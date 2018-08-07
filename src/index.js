@@ -4,28 +4,11 @@ import Cache from './cache'
 
 const localImport = /^[.]{1,2}\//
 
-const isAlias = (file, alias) => {
-  if (alias === file) {
-    return true
-  }
-  if (!file.startsWith(alias)) {
-    return false
-  }
-  return file[alias.length] === '/'
-}
-
-const getAlias = (file, aliases) => {
-  for (const p in aliases) {
-    if (aliases.hasOwnProperty(p) && isAlias(file, p)) return p
-  }
-  return null
-}
-
 const fileExists = file => {
   try {
     if (fs.existsSync(file)) {
       let stat = fs.statSync(file)
-      return stat.isFile();
+      return stat.isFile()
     }
   } catch (e) {}
   return false
@@ -37,6 +20,33 @@ const getExistingFileWithExt = (file, extensions) => {
     if (fileExists(f)) return f
   }
   return null
+}
+
+const resolvePath = (file, options) => {
+  if (fs.existsSync(file)) {
+    if (!fs.statSync(file).isDirectory()) {
+      // Consider it a file
+      return file
+    } else {
+      const entry = resolveModuleEntry(file, options)
+      if (entry) {
+        return entry
+      }
+    }
+
+    // There is a dir, also check if there isn't a file with extension
+    // on the same level with dir
+    let f = getExistingFileWithExt(file, options.extensions)
+    if (f !== null) {
+      return f
+    }
+
+    // Consider the file to be index.*
+    file = path.resolve(file, '.', options.indexFile)
+  }
+
+  // Try to get using extensions
+  return getExistingFileWithExt(file, options.extensions)
 }
 
 const resolveModuleEntry = (dir, options) => {
@@ -59,6 +69,47 @@ const resolveModuleEntry = (dir, options) => {
   }
 }
 
+const isAlias = (file, alias) => {
+  if (alias === file) {
+    return true
+  }
+  if (!file.startsWith(alias)) {
+    return false
+  }
+  return file[alias.length] === '/'
+}
+const getAlias = function getAlias (file, aliases, start) {
+  for (let i = start, l = aliases.length, o; i < l; ++i) {
+    if ((o = aliases[i]) && isAlias(file, o[0])) return [ i, o ]
+  }
+  return null
+}
+const resolveAliases = (target, aliases, start = 0) => {
+  if (localImport.test(target)) return null
+  const tuple = getAlias(target, aliases, start)
+  if (tuple === null) return null
+  let [ cursor, [ alias, p ] ] = tuple
+  p = path.join(p, target.substr(alias.length))
+  return resolveAliases(p, aliases, ++cursor) || p
+}
+
+const resolveModuleAsset = (t, options) => {
+  if (path.isAbsolute(t)) {
+    return resolvePath(t, options)
+  }
+  let moduleDir, parts = t.split('/'), moduleName = parts[0], res
+  if (t.charAt(0) === '@') {
+    moduleName = parts.slice(0, 2).join('/')
+    res = parts.slice(2).join('/')
+  } else {
+    moduleName = parts.shift()
+    res = parts.join('/')
+  }
+  let pkgfile = require.resolve(path.join(moduleName, 'package.json'))
+  moduleDir = pkgfile.slice(0, -12)
+  return resolvePath(path.resolve(moduleDir, res), options)
+}
+
 export default (options) => {
   if (!options) {
     options = { extensions: ['.js'], alias: {} }
@@ -78,40 +129,19 @@ export default (options) => {
     return {}
   }
 
+  options = Object.assign({}, options)
+
+  // { k/v, ... } => [ [k, v], ... ]
+  const aliases = options.alias
+  options.alias = Object.keys(aliases).reduce((p, k) => (p.push([ k, aliases[k] ]), p), []) // eslint-disable-line
+
   if (!options.indexFile) {
     options.indexFile = 'index'
   }
 
-  options.mainFields = options.mainFields || [ 'module', 'main', 'jsnext:main', 'browser' ]
+  options.mainFields = options.mainFields || [ 'module', 'jsnext:main', 'main', 'browser' ]
 
   const cache = new Cache()
-
-  const resolvePath = file => {
-    if (fs.existsSync(file)) {
-      if (!fs.statSync(file).isDirectory()) {
-        // Consider it a file
-        return file
-      } else {
-        const entry = resolveModuleEntry(file, options)
-        if (entry) {
-          return entry
-        }
-      }
-
-      // There is a dir, also check if there isn't a file with extension
-      // on the same level with dir
-      let f = getExistingFileWithExt(file, options.extensions)
-      if (f !== null) {
-        return f
-      }
-
-      // Consider the file to be index.*
-      file = path.resolve(file, '.', options.indexFile)
-    }
-
-    // Try to get using extensions
-    return getExistingFileWithExt(file, options.extensions)
-  }
 
   return {
     resolveId (importee, importer) {
@@ -125,24 +155,21 @@ export default (options) => {
         return cv
       }
 
-      let file = null
+      var file = null
       if (!localImport.test(importee)) {
         // Check for alias
-        let alias = getAlias(importee, options.alias)
-        if (alias === null) {
+        var p = resolveAliases(importee, options.alias)
+        if (p) {
+          file = resolveModuleAsset(p, options)
+        } else {
           return null
         }
-        file = importee.substr(alias.length)
-        if (file !== '') {
-          file = '.' + file
-        }
-        file = path.resolve(options.alias[alias], file)
       } else {
         // Local import is relative to importer
         file = path.resolve(importer, '..', importee)
       }
 
-      const newPath = resolvePath(file)
+      const newPath = resolvePath(file, options)
       if (newPath) {
         cache.add(cacheKey, newPath)
         return newPath

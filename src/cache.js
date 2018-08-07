@@ -1,5 +1,5 @@
 export default class Cache {
-  constructor(options = {}) {
+  constructor (options = {}) {
     this._c = {}
   }
 
@@ -16,7 +16,7 @@ export default class Cache {
    * @param {string} id
    * @return {string|nulld}
    */
-  resolve(id, origin) {
+  resolve (id, origin) {
     const key = this.getCacheKey(id, origin)
 
     if (key in this._c) {
@@ -26,8 +26,8 @@ export default class Cache {
     return false
   }
 
-  getCacheKey(id, origin) {
-    const isRelativePath = id.indexOf('.') === 0;
-    return isRelativePath ? `${origin}:${id}` : id;
+  getCacheKey (id, origin) {
+    const isRelativePath = id.indexOf('.') === 0
+    return isRelativePath ? `${origin}:${id}` : id
   }
 }

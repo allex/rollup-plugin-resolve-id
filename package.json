@@ -7,15 +7,17 @@
     "lint": "standard \"src/*.js\"",
     "lint:fix": "standard \"src/*.js\" --fix",
     "build": "rollup-worker -c .fssrc.js",
-    "test": "npm run lint",
+    "test": "npm run lint && jest",
     "prepare": "npm run build"
   },
   "repository": "allex/rollup-plugin-resolve-id",
   "keywords": [
     "rollup",
     "rollup-plugin",
+    "resolveId",
     "import",
     "alias",
+    "aliases",
     "extensions",
     "resolver",
     "mainFields"
@@ -27,10 +29,31 @@
   },
   "homepage": "https://github.com/allex/rollup-plugin-resolve-id",
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-preset-env": "^1.7.0"
+    "@babel/core": "latest",
+    "@babel/plugin-proposal-class-properties": "latest",
+    "@babel/plugin-proposal-decorators": "latest",
+    "@babel/plugin-proposal-object-rest-spread": "latest",
+    "@babel/plugin-transform-runtime": "latest",
+    "@babel/preset-env": "latest",
+    "@babel/runtime": "latest",
+    "@fedor/standard": "next",
+    "jest": "^23.4.2",
+    "rollup-plugin-babel": "^4.0.0-beta.8"
   },
   "engines": {
     "node": ">=5.12.0"
+  },
+  "standard": {
+    "ignore": [
+      "test"
+    ]
+  },
+  "jest": {
+    "forceExit": true,
+    "testMatch": [
+      "<rootDir>/test/*.test.js",
+      "<rootDir>/test/*.unittest.js"
+    ],
+    "testEnvironment": "node"
   }
 }
