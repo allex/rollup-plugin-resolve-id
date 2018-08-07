@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-resolve-id",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Resolves import statements using aliases and file extensions, (sync with webpack resolve specs)",
   "main": "lib/index.js",
   "scripts": {
